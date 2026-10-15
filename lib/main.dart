@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
-
 const String studentName = 'Derren Wardhana';
 const String studentId = '2415051073';
 
@@ -47,7 +46,6 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Layar Compact/Medium: NavigationBar di bawah[cite: 1]
         if (constraints.maxWidth < 840) {
           return Scaffold(
             body: _pages[_selectedIndex],
@@ -65,7 +63,6 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
           );
         }
 
-        // Layar Expanded: NavigationRail di sebelah kiri[cite: 1]
         return Scaffold(
           body: Row(
             children: [
@@ -104,7 +101,7 @@ class StudentHeader extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       color: Colors.blue.shade50,
       child: const Text(
-        'Mahasiswa: $studentId - $studentName',
+        'Mahasiswa: $studentId\n$studentName',
         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
       ),
     );
@@ -125,7 +122,7 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const StudentHeader(), // Reusable widget 1[cite: 1]
+            const StudentHeader(),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -146,7 +143,7 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE (Load JSON & State Favorite)
+// 4. COURSES PAGE (Tahap 2: State Ownership di Parent)
 // ==========================================
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -158,6 +155,9 @@ class CoursesPage extends StatefulWidget {
 class _CoursesPageState extends State<CoursesPage> {
   List<Map<String, dynamic>> _courses = [];
   bool _isLoading = true;
+  
+  // TAHAP 2: State yang dimiliki parent, diteruskan ke child lewat konstruktor/callback
+  int _totalFavorites = 0;
 
   @override
   void initState() {
@@ -174,7 +174,7 @@ class _CoursesPageState extends State<CoursesPage> {
       setState(() {
         _courses = list.map((e) {
           final map = Map<String, dynamic>.from(e);
-          map['isFavorite'] = false; // Tambahkan state lokal untuk interaksi favorit[cite: 1]
+          map['isFavorite'] = false;
           return map;
         }).toList();
         _isLoading = false;
@@ -187,9 +187,9 @@ class _CoursesPageState extends State<CoursesPage> {
   }
 
   int _columnsForWidth(double width) {
-    if (width < 600) return 1; // Compact: 1 kolom[cite: 1]
-    if (width < 840) return 2; // Medium: 2 kolom[cite: 1]
-    return 3;                  // Expanded: 3 kolom[cite: 1]
+    if (width < 600) return 1;
+    if (width < 840) return 2;
+    return 3;
   }
 
   @override
@@ -198,7 +198,20 @@ class _CoursesPageState extends State<CoursesPage> {
       appBar: AppBar(title: const Text('Course Explorer')),
       body: Column(
         children: [
-          const StudentHeader(), // Identitas pada UI[cite: 1]
+          const StudentHeader(),
+          
+          // TAHAP 2: UI untuk menampilkan total favorite dari parent state
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            color: Colors.amber.shade100,
+            child: Text(
+              'Total Favorites: $_totalFavorites',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+          
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -218,9 +231,8 @@ class _CoursesPageState extends State<CoursesPage> {
                             itemBuilder: (context, index) {
                               final course = _courses[index];
                               return CourseCard(
-                                course: course, // Mengirim data course
+                                course: course,
                                 onTap: () async {
-                                  // Passing data melalui constructor ke halaman detail[cite: 1]
                                   final result = await Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -234,9 +246,15 @@ class _CoursesPageState extends State<CoursesPage> {
                                     );
                                   }
                                 },
+                                // TAHAP 2: Callback ke parent untuk mengubah state global _totalFavorites
                                 onFavoriteToggle: () {
                                   setState(() {
                                     course['isFavorite'] = !(course['isFavorite'] as bool);
+                                    if (course['isFavorite'] == true) {
+                                      _totalFavorites++;
+                                    } else {
+                                      _totalFavorites--;
+                                    }
                                   });
                                 },
                               );
@@ -301,7 +319,7 @@ class CourseCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text('${course['code']} • ${course['credits']} SKS'),
+              Text('${course['code']}\n${course['credits']} SKS'),
               const SizedBox(height: 4),
               Text(
                 'Status: ${course['status'] ?? 'planned'}',
@@ -316,7 +334,7 @@ class CourseCard extends StatelessWidget {
 }
 
 // ==========================================
-// 6. COURSE DETAIL PAGE (Menerima Constructor)
+// 6. COURSE DETAIL PAGE
 // ==========================================
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
@@ -332,7 +350,7 @@ class CourseDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const StudentHeader(), // Identitas pada UI[cite: 1]
+            const StudentHeader(),
             const SizedBox(height: 20),
             Text(course['title'] ?? '', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
@@ -347,7 +365,7 @@ class CourseDetailPage extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
                 onPressed: () {
-                  Navigator.pop(context, true); // Mengembalikan nilai true ke halaman sebelumnya[cite: 1]
+                  Navigator.pop(context, true);
                 },
                 child: const Text('Simpan & Kembali'),
               ),
@@ -400,14 +418,12 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             const CircleAvatar(
               radius: 45,
-              backgroundImage: AssetImage('assets/images/profile.jpg.jpeg'),
+              backgroundImage: AssetImage('assets/images/profile.jpg'), // Pastikan file fotomu ada
             ),
             const SizedBox(height: 12),
             Text(studentName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             Text('NIM: $studentId', style: const TextStyle(color: Colors.grey)),
             const Divider(height: 32),
-            
-            // Form Feedback dengan Validasi[cite: 1]
             Form(
               key: _formKey,
               child: Column(
@@ -440,7 +456,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          // Menampilkan AlertDialog konfirmasi[cite: 1]
                           showDialog(
                             context: context,
                             builder: (_) => AlertDialog(
