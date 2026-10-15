@@ -24,7 +24,7 @@ class CourseExplorerApp extends StatelessWidget {
 }
 
 // ==========================================
-// 1. RESPONSIVE SHELL (Adaptive Navigation)
+// 1. RESPONSIVE SHELL
 // ==========================================
 class ResponsiveShell extends StatefulWidget {
   const ResponsiveShell({super.key});
@@ -143,7 +143,7 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE (Tahap 2: State Ownership di Parent)
+// 4. COURSES PAGE (Tahap 3: Single Source of Truth)
 // ==========================================
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -156,8 +156,9 @@ class _CoursesPageState extends State<CoursesPage> {
   List<Map<String, dynamic>> _courses = [];
   bool _isLoading = true;
   
-  // TAHAP 2: State yang dimiliki parent, diteruskan ke child lewat konstruktor/callback
-  int _totalFavorites = 0;
+  // TAHAP 3: 1 & 2. Kepemilikan State di Parent (Single Source of Truth)
+  // Kita simpan kode mata kuliah yang difavoritkan di dalam Set
+  final Set<String> _favoriteCourseCodes = {};
 
   @override
   void initState() {
@@ -172,11 +173,8 @@ class _CoursesPageState extends State<CoursesPage> {
       final list = jsonData['courses'] as List<dynamic>;
 
       setState(() {
-        _courses = list.map((e) {
-          final map = Map<String, dynamic>.from(e);
-          map['isFavorite'] = false;
-          return map;
-        }).toList();
+        // Kita tidak lagi menyimpan state isFavorite di dalam data course
+        _courses = list.map((e) => Map<String, dynamic>.from(e)).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -200,13 +198,13 @@ class _CoursesPageState extends State<CoursesPage> {
         children: [
           const StudentHeader(),
           
-          // TAHAP 2: UI untuk menampilkan total favorite dari parent state
+          // TAHAP 3: 5. Widget ini dan CourseCard menampilkan nilai yang konsisten dari 1 sumber
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             color: Colors.amber.shade100,
             child: Text(
-              'Total Favorites: $_totalFavorites',
+              'Total Favorites: ${_favoriteCourseCodes.length}',
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
@@ -230,30 +228,28 @@ class _CoursesPageState extends State<CoursesPage> {
                             itemCount: _courses.length,
                             itemBuilder: (context, index) {
                               final course = _courses[index];
+                              final courseCode = course['code'] as String;
+                              
+                              // Mengecek apakah course ini ada di dalam list favorite parent
+                              final isFav = _favoriteCourseCodes.contains(courseCode);
+
                               return CourseCard(
                                 course: course,
+                                isFavorite: isFav, // TAHAP 3: 3. Kirim data ke child via constructor
                                 onTap: () async {
-                                  final result = await Navigator.push(
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => CourseDetailPage(course: course),
                                     ),
                                   );
-                                  if (result == true && mounted) {
-                                    // ignore: use_build_context_synchronously
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Berhasil memperbarui: ${course['title']}')),
-                                    );
-                                  }
                                 },
-                                // TAHAP 2: Callback ke parent untuk mengubah state global _totalFavorites
-                                onFavoriteToggle: () {
+                                onFavoriteChanged: () { // TAHAP 3: 4. Kirim aksi perubahan lewat callback
                                   setState(() {
-                                    course['isFavorite'] = !(course['isFavorite'] as bool);
-                                    if (course['isFavorite'] == true) {
-                                      _totalFavorites++;
+                                    if (isFav) {
+                                      _favoriteCourseCodes.remove(courseCode);
                                     } else {
-                                      _totalFavorites--;
+                                      _favoriteCourseCodes.add(courseCode);
                                     }
                                   });
                                 },
@@ -270,23 +266,24 @@ class _CoursesPageState extends State<CoursesPage> {
 }
 
 // ==========================================
-// 5. REUSABLE WIDGET: COURSE CARD
+// 5. REUSABLE WIDGET: COURSE CARD (Lifting State Up)
 // ==========================================
 class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final bool isFavorite; // Menerima state dari luar (Parent)
   final VoidCallback onTap;
-  final VoidCallback onFavoriteToggle;
+  final VoidCallback onFavoriteChanged; // Callback aksi ke Parent
 
   const CourseCard({
     super.key,
     required this.course,
+    required this.isFavorite,
     required this.onTap,
-    required this.onFavoriteToggle,
+    required this.onFavoriteChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isFav = course['isFavorite'] ?? false;
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -311,8 +308,8 @@ class CourseCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.red),
-                    onPressed: onFavoriteToggle,
+                    icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red),
+                    onPressed: onFavoriteChanged, // Memanggil callback saat diklik
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
                   ),
@@ -367,7 +364,7 @@ class CourseDetailPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
-                child: const Text('Simpan & Kembali'),
+                child: const Text('Kembali'),
               ),
             ),
           ],
@@ -418,7 +415,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             const CircleAvatar(
               radius: 45,
-              backgroundImage: AssetImage('assets/images/profile.jpg'), // Pastikan file fotomu ada
+              backgroundImage: AssetImage('assets/images/profile.jpg'),
             ),
             const SizedBox(height: 12),
             Text(studentName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
