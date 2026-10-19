@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // 1. Import package provider
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+
+import 'course_provider.dart'; // 2. Import file CourseProvider yang dibuat di Tahap 5
 
 const String studentName = 'Derren Wardhana';
 const String studentId = '2415051073';
 
 void main() {
-  runApp(const CourseExplorerApp());
+  // TAHAP 6: 3. Bungkus aplikasi dengan ChangeNotifierProvider
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CourseProvider(),
+      child: const CourseExplorerApp(),
+    ),
+  );
 }
 
 class CourseExplorerApp extends StatelessWidget {
@@ -143,7 +152,7 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE (Tahap 4: ValueNotifier)
+// 4. COURSES PAGE
 // ==========================================
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -157,8 +166,6 @@ class _CoursesPageState extends State<CoursesPage> {
   bool _isLoading = true;
   
   final Set<String> _favoriteCourseCodes = {};
-  
-  // TAHAP 4: 1. Buat ValueNotifier<int> untuk nilai sederhana
   final ValueNotifier<int> _totalFavoritesNotifier = ValueNotifier<int>(0);
 
   @override
@@ -169,7 +176,6 @@ class _CoursesPageState extends State<CoursesPage> {
 
   @override
   void dispose() {
-    // Jangan lupa hapus (dispose) notifier kalau halaman ditutup biar gak boros memori
     _totalFavoritesNotifier.dispose();
     super.dispose();
   }
@@ -205,7 +211,6 @@ class _CoursesPageState extends State<CoursesPage> {
         children: [
           const StudentHeader(),
           
-          // TAHAP 4: 2. Tampilkan nilai dengan ValueListenableBuilder
           ValueListenableBuilder<int>(
             valueListenable: _totalFavoritesNotifier,
             builder: (context, value, child) {
@@ -255,16 +260,13 @@ class _CoursesPageState extends State<CoursesPage> {
                                     ),
                                   );
                                 },
-                                // TAHAP 4: 3. Tombol (button favorite) yang mengubah value
                                 onFavoriteChanged: () {
                                   setState(() {
                                     if (isFav) {
                                       _favoriteCourseCodes.remove(courseCode);
-                                      // Ubah value dari notifier (otomatis update UI di ValueListenableBuilder)
                                       _totalFavoritesNotifier.value--;
                                     } else {
                                       _favoriteCourseCodes.add(courseCode);
-                                      // Ubah value dari notifier
                                       _totalFavoritesNotifier.value++;
                                     }
                                   });
