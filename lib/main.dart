@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // 1. Import package provider
+import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'course_provider.dart'; // 2. Import file CourseProvider yang dibuat di Tahap 5
+import 'course_provider.dart'; // Pastikan file course_provider.dart ada di folder yang sama
 
 const String studentName = 'Derren Wardhana';
 const String studentId = '2415051073';
 
 void main() {
-  // TAHAP 6: 3. Bungkus aplikasi dengan ChangeNotifierProvider
   runApp(
     ChangeNotifierProvider(
       create: (_) => CourseProvider(),
@@ -152,7 +151,7 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE
+// 4. COURSES PAGE (Tahap 7: watch, read, Consumer)
 // ==========================================
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -164,20 +163,11 @@ class CoursesPage extends StatefulWidget {
 class _CoursesPageState extends State<CoursesPage> {
   List<Map<String, dynamic>> _courses = [];
   bool _isLoading = true;
-  
-  final Set<String> _favoriteCourseCodes = {};
-  final ValueNotifier<int> _totalFavoritesNotifier = ValueNotifier<int>(0);
 
   @override
   void initState() {
     super.initState();
     _loadCoursesFromJson();
-  }
-
-  @override
-  void dispose() {
-    _totalFavoritesNotifier.dispose();
-    super.dispose();
   }
 
   Future<void> _loadCoursesFromJson() async {
@@ -205,26 +195,24 @@ class _CoursesPageState extends State<CoursesPage> {
 
   @override
   Widget build(BuildContext context) {
+    // TAHAP 7: 1. Gunakan watch() untuk menampilkan jumlah favorite
+    final int favoriteCount = context.watch<CourseProvider>().favorites.length;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Course Explorer')),
       body: Column(
         children: [
           const StudentHeader(),
           
-          ValueListenableBuilder<int>(
-            valueListenable: _totalFavoritesNotifier,
-            builder: (context, value, child) {
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                color: Colors.amber.shade100,
-                child: Text(
-                  'Total Favorites: $value',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              );
-            },
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            color: Colors.amber.shade100,
+            child: Text(
+              'Total Favorites: $favoriteCount',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           
           Expanded(
@@ -232,44 +220,43 @@ class _CoursesPageState extends State<CoursesPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : _courses.isEmpty
                     ? const Center(child: Text('Tidak ada data course.'))
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          return GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: _columnsForWidth(constraints.maxWidth),
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 2.2,
-                            ),
-                            itemCount: _courses.length,
-                            itemBuilder: (context, index) {
-                              final course = _courses[index];
-                              final courseCode = course['code'] as String;
-                              
-                              final isFav = _favoriteCourseCodes.contains(courseCode);
+                    // TAHAP 7: 3. Gunakan Consumer pada satu bagian kecil UI
+                    : Consumer<CourseProvider>(
+                        builder: (context, provider, child) {
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              return GridView.builder(
+                                padding: const EdgeInsets.all(16),
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: _columnsForWidth(constraints.maxWidth),
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: 2.2,
+                                ),
+                                itemCount: _courses.length,
+                                itemBuilder: (context, index) {
+                                  final course = _courses[index];
+                                  final courseCode = course['code'] as String;
+                                  
+                                  // Mengecek status favorite dari provider
+                                  final isFav = provider.favorites.contains(courseCode);
 
-                              return CourseCard(
-                                course: course,
-                                isFavorite: isFav,
-                                onTap: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => CourseDetailPage(course: course),
-                                    ),
+                                  return CourseCard(
+                                    course: course,
+                                    isFavorite: isFav,
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => CourseDetailPage(course: course),
+                                        ),
+                                      );
+                                    },
+                                    onFavoriteChanged: () {
+                                      // TAHAP 7: 2. Gunakan read() pada tombol toggle favorite
+                                      context.read<CourseProvider>().toggleFavorite(courseCode);
+                                    },
                                   );
-                                },
-                                onFavoriteChanged: () {
-                                  setState(() {
-                                    if (isFav) {
-                                      _favoriteCourseCodes.remove(courseCode);
-                                      _totalFavoritesNotifier.value--;
-                                    } else {
-                                      _favoriteCourseCodes.add(courseCode);
-                                      _totalFavoritesNotifier.value++;
-                                    }
-                                  });
                                 },
                               );
                             },
