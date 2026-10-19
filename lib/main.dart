@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// Import file-file buatan kita
-import 'course_provider.dart';
+// Import model, service, repository, dan provider
 import 'models/course.dart';
-import 'services/course_service.dart'; // TAHAP 9: Import CourseService
+import 'services/course_service.dart';
+import 'repositories/course_repository.dart';
+import 'course_provider.dart';
 
 const String studentName = 'Derren Wardhana';
 const String studentId = '2415051073';
 
 void main() {
+  // Setup Dependency Injection sederhana
+  final courseService = CourseService();
+  final courseRepository = CourseRepository(courseService);
+
   runApp(
     ChangeNotifierProvider(
-      create: (_) => CourseProvider(),
+      // 1. Masukkan repository ke dalam Provider, lalu langsung panggil loadCourses()
+      create: (_) => CourseProvider(courseRepository)..loadCourses(),
       child: const CourseExplorerApp(),
     ),
   );
@@ -47,7 +53,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 
   final List<Widget> _pages = const [
     HomePage(),
-    CoursesPage(),
+    CoursesPage(), // Halaman ini sekarang dipanggil
     ProfilePage(),
   ];
 
@@ -152,42 +158,10 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE
+// 4. COURSES PAGE (Tahap 11: Konsumsi Async State)
 // ==========================================
-class CoursesPage extends StatefulWidget {
+class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
-
-  @override
-  State<CoursesPage> createState() => _CoursesPageState();
-}
-
-class _CoursesPageState extends State<CoursesPage> {
-  List<Course> _courses = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCoursesFromJson();
-  }
-
-  Future<void> _loadCoursesFromJson() async {
-    try {
-      // TAHAP 9: Uji service dengan memanggilnya langsung di sini sementara waktu
-      final service = CourseService();
-      final List<Course> loadedCourses = await service.loadCourses();
-
-      setState(() {
-        _courses = loadedCourses; // Data langsung diterima dalam bentuk List<Course>
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error loading courses: $e'); // Debug print kalau ada error
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   int _columnsForWidth(double width) {
     if (width < 600) return 1;
@@ -197,7 +171,9 @@ class _CoursesPageState extends State<CoursesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final int favoriteCount = context.watch<CourseProvider>().favorites.length;
+    // Kita panggil watch untuk mendengarkan seluruh perubahan di provider
+    final provider = context.watch<CourseProvider>();
+    final int favoriteCount = provider.favorites.length;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Course Explorer')),
@@ -217,13 +193,24 @@ class _CoursesPageState extends State<CoursesPage> {
           ),
           
           Expanded(
-            child: _isLoading
+            // TAHAP 11: 3. Tampilkan indikator loading jika isLoading == true
+            child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _courses.isEmpty
-                    ? const Center(child: Text('Tidak ada data course.'))
-                    : Consumer<CourseProvider>(
-                        builder: (context, provider, child) {
-                          return LayoutBuilder(
+                
+                // TAHAP 11: 4. Tampilkan error jika ada error
+                : provider.error != null
+                    ? Center(
+                        child: Text(
+                          'Terjadi Kesalahan:\n${provider.error}', 
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      )
+                    
+                    // TAHAP 11: 5. Tampilkan data jika berhasil
+                    : provider.courses.isEmpty
+                        ? const Center(child: Text('Tidak ada data course.'))
+                        : LayoutBuilder(
                             builder: (context, constraints) {
                               return GridView.builder(
                                 padding: const EdgeInsets.all(16),
@@ -233,9 +220,9 @@ class _CoursesPageState extends State<CoursesPage> {
                                   mainAxisSpacing: 12,
                                   childAspectRatio: 2.2,
                                 ),
-                                itemCount: _courses.length,
+                                itemCount: provider.courses.length,
                                 itemBuilder: (context, index) {
-                                  final course = _courses[index];
+                                  final course = provider.courses[index];
                                   final courseCode = course.code;
                                   
                                   final isFav = provider.favorites.contains(courseCode);
@@ -258,9 +245,7 @@ class _CoursesPageState extends State<CoursesPage> {
                                 },
                               );
                             },
-                          );
-                        },
-                      ),
+                          ),
           ),
         ],
       ),
