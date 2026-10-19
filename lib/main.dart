@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 
-// Import file provider dan model yang sudah kita buat
+// Import file-file buatan kita
 import 'course_provider.dart';
-import 'models/course.dart'; // TAHAP 8: Import model Course
+import 'models/course.dart';
+import 'services/course_service.dart'; // TAHAP 9: Import CourseService
 
 const String studentName = 'Derren Wardhana';
 const String studentId = '2415051073';
@@ -163,7 +162,6 @@ class CoursesPage extends StatefulWidget {
 }
 
 class _CoursesPageState extends State<CoursesPage> {
-  // TAHAP 8: Ubah tipe data dari List<Map<String, dynamic>> menjadi List<Course>
   List<Course> _courses = [];
   bool _isLoading = true;
 
@@ -175,16 +173,16 @@ class _CoursesPageState extends State<CoursesPage> {
 
   Future<void> _loadCoursesFromJson() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/data/student_data.json');
-      final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
-      final list = jsonData['courses'] as List<dynamic>;
+      // TAHAP 9: Uji service dengan memanggilnya langsung di sini sementara waktu
+      final service = CourseService();
+      final List<Course> loadedCourses = await service.loadCourses();
 
       setState(() {
-        // TAHAP 8: Gunakan Course.fromJson untuk mapping data
-        _courses = list.map((e) => Course.fromJson(e as Map<String, dynamic>)).toList();
+        _courses = loadedCourses; // Data langsung diterima dalam bentuk List<Course>
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('Error loading courses: $e'); // Debug print kalau ada error
       setState(() {
         _isLoading = false;
       });
@@ -238,7 +236,7 @@ class _CoursesPageState extends State<CoursesPage> {
                                 itemCount: _courses.length,
                                 itemBuilder: (context, index) {
                                   final course = _courses[index];
-                                  final courseCode = course.code; // TAHAP 8: Akses property object, bukan Map
+                                  final courseCode = course.code;
                                   
                                   final isFav = provider.favorites.contains(courseCode);
 
@@ -274,7 +272,6 @@ class _CoursesPageState extends State<CoursesPage> {
 // 5. REUSABLE WIDGET: COURSE CARD
 // ==========================================
 class CourseCard extends StatelessWidget {
-  // TAHAP 8: Terima object Course, bukan Map
   final Course course;
   final bool isFavorite;
   final VoidCallback onTap;
@@ -307,7 +304,7 @@ class CourseCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      course.title, // TAHAP 8: Akses menggunakan dot notation
+                      course.title,
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -322,10 +319,10 @@ class CourseCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text('${course.code}\n${course.credits} SKS'), // TAHAP 8
+              Text('${course.code}\n${course.credits} SKS'),
               const SizedBox(height: 4),
               Text(
-                'Status: ${course.status}', // TAHAP 8
+                'Status: ${course.status}',
                 style: TextStyle(fontSize: 12, color: Colors.blue.shade700, fontWeight: FontWeight.w500),
               ),
             ],
@@ -340,7 +337,6 @@ class CourseCard extends StatelessWidget {
 // 6. COURSE DETAIL PAGE
 // ==========================================
 class CourseDetailPage extends StatelessWidget {
-  // TAHAP 8: Terima object Course
   final Course course;
 
   const CourseDetailPage({super.key, required this.course});
@@ -348,7 +344,7 @@ class CourseDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(course.title)), // TAHAP 8
+      appBar: AppBar(title: Text(course.title)),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -356,13 +352,13 @@ class CourseDetailPage extends StatelessWidget {
           children: [
             const StudentHeader(),
             const SizedBox(height: 20),
-            Text(course.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), // TAHAP 8
+            Text(course.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Text('Kode Mata Kuliah: ${course.code}', style: const TextStyle(fontSize: 16)), // TAHAP 8
+            Text('Kode Mata Kuliah: ${course.code}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Jumlah SKS: ${course.credits}', style: const TextStyle(fontSize: 16)), // TAHAP 8
+            Text('Jumlah SKS: ${course.credits}', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Status: ${course.status}', style: const TextStyle(fontSize: 16)), // TAHAP 8
+            Text('Status: ${course.status}', style: const TextStyle(fontSize: 16)),
             const Spacer(),
             SizedBox(
               width: double.infinity,
