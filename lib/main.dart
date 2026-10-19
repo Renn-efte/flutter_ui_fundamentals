@@ -143,7 +143,7 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE (Tahap 3: Single Source of Truth)
+// 4. COURSES PAGE (Tahap 4: ValueNotifier)
 // ==========================================
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -156,14 +156,22 @@ class _CoursesPageState extends State<CoursesPage> {
   List<Map<String, dynamic>> _courses = [];
   bool _isLoading = true;
   
-  // TAHAP 3: 1 & 2. Kepemilikan State di Parent (Single Source of Truth)
-  // Kita simpan kode mata kuliah yang difavoritkan di dalam Set
   final Set<String> _favoriteCourseCodes = {};
+  
+  // TAHAP 4: 1. Buat ValueNotifier<int> untuk nilai sederhana
+  final ValueNotifier<int> _totalFavoritesNotifier = ValueNotifier<int>(0);
 
   @override
   void initState() {
     super.initState();
     _loadCoursesFromJson();
+  }
+
+  @override
+  void dispose() {
+    // Jangan lupa hapus (dispose) notifier kalau halaman ditutup biar gak boros memori
+    _totalFavoritesNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCoursesFromJson() async {
@@ -173,7 +181,6 @@ class _CoursesPageState extends State<CoursesPage> {
       final list = jsonData['courses'] as List<dynamic>;
 
       setState(() {
-        // Kita tidak lagi menyimpan state isFavorite di dalam data course
         _courses = list.map((e) => Map<String, dynamic>.from(e)).toList();
         _isLoading = false;
       });
@@ -198,16 +205,21 @@ class _CoursesPageState extends State<CoursesPage> {
         children: [
           const StudentHeader(),
           
-          // TAHAP 3: 5. Widget ini dan CourseCard menampilkan nilai yang konsisten dari 1 sumber
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            color: Colors.amber.shade100,
-            child: Text(
-              'Total Favorites: ${_favoriteCourseCodes.length}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+          // TAHAP 4: 2. Tampilkan nilai dengan ValueListenableBuilder
+          ValueListenableBuilder<int>(
+            valueListenable: _totalFavoritesNotifier,
+            builder: (context, value, child) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                color: Colors.amber.shade100,
+                child: Text(
+                  'Total Favorites: $value',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              );
+            },
           ),
           
           Expanded(
@@ -230,12 +242,11 @@ class _CoursesPageState extends State<CoursesPage> {
                               final course = _courses[index];
                               final courseCode = course['code'] as String;
                               
-                              // Mengecek apakah course ini ada di dalam list favorite parent
                               final isFav = _favoriteCourseCodes.contains(courseCode);
 
                               return CourseCard(
                                 course: course,
-                                isFavorite: isFav, // TAHAP 3: 3. Kirim data ke child via constructor
+                                isFavorite: isFav,
                                 onTap: () async {
                                   await Navigator.push(
                                     context,
@@ -244,12 +255,17 @@ class _CoursesPageState extends State<CoursesPage> {
                                     ),
                                   );
                                 },
-                                onFavoriteChanged: () { // TAHAP 3: 4. Kirim aksi perubahan lewat callback
+                                // TAHAP 4: 3. Tombol (button favorite) yang mengubah value
+                                onFavoriteChanged: () {
                                   setState(() {
                                     if (isFav) {
                                       _favoriteCourseCodes.remove(courseCode);
+                                      // Ubah value dari notifier (otomatis update UI di ValueListenableBuilder)
+                                      _totalFavoritesNotifier.value--;
                                     } else {
                                       _favoriteCourseCodes.add(courseCode);
+                                      // Ubah value dari notifier
+                                      _totalFavoritesNotifier.value++;
                                     }
                                   });
                                 },
@@ -266,13 +282,13 @@ class _CoursesPageState extends State<CoursesPage> {
 }
 
 // ==========================================
-// 5. REUSABLE WIDGET: COURSE CARD (Lifting State Up)
+// 5. REUSABLE WIDGET: COURSE CARD
 // ==========================================
 class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
-  final bool isFavorite; // Menerima state dari luar (Parent)
+  final bool isFavorite;
   final VoidCallback onTap;
-  final VoidCallback onFavoriteChanged; // Callback aksi ke Parent
+  final VoidCallback onFavoriteChanged;
 
   const CourseCard({
     super.key,
@@ -309,7 +325,7 @@ class CourseCard extends StatelessWidget {
                   ),
                   IconButton(
                     icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red),
-                    onPressed: onFavoriteChanged, // Memanggil callback saat diklik
+                    onPressed: onFavoriteChanged,
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
                   ),
