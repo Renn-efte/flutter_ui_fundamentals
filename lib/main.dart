@@ -1,13 +1,13 @@
-// Lokasi: lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// Import folder yang sudah kita rapikan
 import 'services/course_service.dart';
 import 'repositories/course_repository.dart';
 import 'providers/course_provider.dart';
 import 'screens/home_page.dart';
 import 'screens/courses_page.dart';
+import 'screens/favorites_page.dart'; // TAHAP 13: Import halaman Favorites baru
 import 'screens/profile_page.dart';
 
 const String studentName = 'Derren Wardhana';
@@ -49,9 +49,11 @@ class ResponsiveShell extends StatefulWidget {
 class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
+  // TAHAP 13: Tambahkan FavoritesPage ke dalam list menu
   final List<Widget> _pages = const [
     HomePage(),
     CoursesPage(),
+    FavoritesPage(),
     ProfilePage(),
   ];
 
@@ -70,6 +72,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
               destinations: const [
                 NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
                 NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school), label: 'Courses'),
+                NavigationDestination(icon: Icon(Icons.favorite_outline), selectedIcon: Icon(Icons.favorite), label: 'Favorites'), // Menu baru
                 NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
               ],
             ),
@@ -88,6 +91,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
                 destinations: const [
                   NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
                   NavigationRailDestination(icon: Icon(Icons.school), label: Text('Courses')),
+                  NavigationRailDestination(icon: Icon(Icons.favorite), label: Text('Favorites')), // Menu baru
                   NavigationRailDestination(icon: Icon(Icons.person), label: Text('Profile')),
                 ],
               ),

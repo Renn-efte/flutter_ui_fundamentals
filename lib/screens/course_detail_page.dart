@@ -1,5 +1,8 @@
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/course.dart';
+import '../providers/course_provider.dart';
 import '../widgets/student_header.dart';
 
 class CourseDetailPage extends StatelessWidget {
@@ -9,8 +12,22 @@ class CourseDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TAHAP 13: 2. Tampilkan status favorite pada DetailPage dengan Consumer/watch
+    final isFav = context.watch<CourseProvider>().isFavorite(course.code);
+
     return Scaffold(
-      appBar: AppBar(title: Text(course.title)),
+      appBar: AppBar(
+        title: Text(course.title),
+        actions: [
+          // Tambahkan tombol action favorite di app bar (pojok kanan atas)
+          IconButton(
+            icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.red),
+            onPressed: () {
+              context.read<CourseProvider>().toggleFavorite(course.code);
+            },
+          )
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
