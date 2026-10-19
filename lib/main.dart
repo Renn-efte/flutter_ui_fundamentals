@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'course_provider.dart'; // Pastikan file course_provider.dart ada di folder yang sama
+// Import file provider dan model yang sudah kita buat
+import 'course_provider.dart';
+import 'models/course.dart'; // TAHAP 8: Import model Course
 
 const String studentName = 'Derren Wardhana';
 const String studentId = '2415051073';
@@ -151,7 +153,7 @@ class HomePage extends StatelessWidget {
 }
 
 // ==========================================
-// 4. COURSES PAGE (Tahap 7: watch, read, Consumer)
+// 4. COURSES PAGE
 // ==========================================
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -161,7 +163,8 @@ class CoursesPage extends StatefulWidget {
 }
 
 class _CoursesPageState extends State<CoursesPage> {
-  List<Map<String, dynamic>> _courses = [];
+  // TAHAP 8: Ubah tipe data dari List<Map<String, dynamic>> menjadi List<Course>
+  List<Course> _courses = [];
   bool _isLoading = true;
 
   @override
@@ -177,7 +180,8 @@ class _CoursesPageState extends State<CoursesPage> {
       final list = jsonData['courses'] as List<dynamic>;
 
       setState(() {
-        _courses = list.map((e) => Map<String, dynamic>.from(e)).toList();
+        // TAHAP 8: Gunakan Course.fromJson untuk mapping data
+        _courses = list.map((e) => Course.fromJson(e as Map<String, dynamic>)).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -195,7 +199,6 @@ class _CoursesPageState extends State<CoursesPage> {
 
   @override
   Widget build(BuildContext context) {
-    // TAHAP 7: 1. Gunakan watch() untuk menampilkan jumlah favorite
     final int favoriteCount = context.watch<CourseProvider>().favorites.length;
 
     return Scaffold(
@@ -220,7 +223,6 @@ class _CoursesPageState extends State<CoursesPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : _courses.isEmpty
                     ? const Center(child: Text('Tidak ada data course.'))
-                    // TAHAP 7: 3. Gunakan Consumer pada satu bagian kecil UI
                     : Consumer<CourseProvider>(
                         builder: (context, provider, child) {
                           return LayoutBuilder(
@@ -236,9 +238,8 @@ class _CoursesPageState extends State<CoursesPage> {
                                 itemCount: _courses.length,
                                 itemBuilder: (context, index) {
                                   final course = _courses[index];
-                                  final courseCode = course['code'] as String;
+                                  final courseCode = course.code; // TAHAP 8: Akses property object, bukan Map
                                   
-                                  // Mengecek status favorite dari provider
                                   final isFav = provider.favorites.contains(courseCode);
 
                                   return CourseCard(
@@ -253,7 +254,6 @@ class _CoursesPageState extends State<CoursesPage> {
                                       );
                                     },
                                     onFavoriteChanged: () {
-                                      // TAHAP 7: 2. Gunakan read() pada tombol toggle favorite
                                       context.read<CourseProvider>().toggleFavorite(courseCode);
                                     },
                                   );
@@ -274,7 +274,8 @@ class _CoursesPageState extends State<CoursesPage> {
 // 5. REUSABLE WIDGET: COURSE CARD
 // ==========================================
 class CourseCard extends StatelessWidget {
-  final Map<String, dynamic> course;
+  // TAHAP 8: Terima object Course, bukan Map
+  final Course course;
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteChanged;
@@ -306,7 +307,7 @@ class CourseCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      course['title'] ?? '',
+                      course.title, // TAHAP 8: Akses menggunakan dot notation
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -321,10 +322,10 @@ class CourseCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text('${course['code']}\n${course['credits']} SKS'),
+              Text('${course.code}\n${course.credits} SKS'), // TAHAP 8
               const SizedBox(height: 4),
               Text(
-                'Status: ${course['status'] ?? 'planned'}',
+                'Status: ${course.status}', // TAHAP 8
                 style: TextStyle(fontSize: 12, color: Colors.blue.shade700, fontWeight: FontWeight.w500),
               ),
             ],
@@ -339,14 +340,15 @@ class CourseCard extends StatelessWidget {
 // 6. COURSE DETAIL PAGE
 // ==========================================
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
+  // TAHAP 8: Terima object Course
+  final Course course;
 
   const CourseDetailPage({super.key, required this.course});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(course['title'] ?? 'Detail')),
+      appBar: AppBar(title: Text(course.title)), // TAHAP 8
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -354,13 +356,13 @@ class CourseDetailPage extends StatelessWidget {
           children: [
             const StudentHeader(),
             const SizedBox(height: 20),
-            Text(course['title'] ?? '', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(course.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), // TAHAP 8
             const SizedBox(height: 12),
-            Text('Kode Mata Kuliah: ${course['code']}', style: const TextStyle(fontSize: 16)),
+            Text('Kode Mata Kuliah: ${course.code}', style: const TextStyle(fontSize: 16)), // TAHAP 8
             const SizedBox(height: 8),
-            Text('Jumlah SKS: ${course['credits']}', style: const TextStyle(fontSize: 16)),
+            Text('Jumlah SKS: ${course.credits}', style: const TextStyle(fontSize: 16)), // TAHAP 8
             const SizedBox(height: 8),
-            Text('Status: ${course['status']}', style: const TextStyle(fontSize: 16)),
+            Text('Status: ${course.status}', style: const TextStyle(fontSize: 16)), // TAHAP 8
             const Spacer(),
             SizedBox(
               width: double.infinity,
