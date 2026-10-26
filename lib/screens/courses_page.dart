@@ -1,8 +1,11 @@
+// Lokasi: lib/screens/courses_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/course_provider.dart';
 import '../widgets/student_header.dart';
 import '../widgets/course_card.dart';
+import '../widgets/error_view.dart'; // Import ErrorView yang baru dibuat
 import 'course_detail_page.dart';
 
 class CoursesPage extends StatelessWidget {
@@ -24,6 +27,7 @@ class CoursesPage extends StatelessWidget {
       body: Column(
         children: [
           const StudentHeader(),
+          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -34,19 +38,22 @@ class CoursesPage extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
+          
           Expanded(
+            // TAHAP 5: Penanganan State yang eksplisit
             child: provider.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator()) // 1. Loading State
+                
                 : provider.error != null
-                    ? Center(
-                        child: Text(
-                          'Terjadi Kesalahan:\n${provider.error}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red),
-                        ),
+                    ? ErrorView( // 2. Error State menggunakan custom widget
+                        message: 'Terjadi Kesalahan:\n${provider.error}',
+                        onRetry: provider.loadCourses, // Memanggil ulang fetch API
                       )
+                    
                     : provider.courses.isEmpty
-                        ? const Center(child: Text('Tidak ada data course.'))
+                        ? const Center(child: Text('Data course belum tersedia')) // 3. Empty State
+                        
+                        // 4. Success State
                         : LayoutBuilder(
                             builder: (context, constraints) {
                               return GridView.builder(
