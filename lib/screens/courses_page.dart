@@ -7,6 +7,7 @@ import '../widgets/student_header.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart'; // Import ErrorView yang baru dibuat
 import 'course_detail_page.dart';
+import 'course_form_page.dart';
 
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
@@ -24,6 +25,18 @@ class CoursesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Course Explorer')),
+      // TAMBAHAN TAHAP 6: Tombol mengambang untuk navigasi ke form tambah
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CourseFormPage()),
+          );
+        },
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
+      ),
       body: Column(
         children: [
           const StudentHeader(),

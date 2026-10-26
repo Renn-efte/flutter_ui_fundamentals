@@ -1,4 +1,4 @@
-
+// Lokasi: lib/providers/course_provider.dart
 import 'package:flutter/material.dart';
 import '../models/course.dart';
 import '../repositories/course_repository.dart';
@@ -28,7 +28,12 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // TAHAP 13: Fungsi mengecek status favorite (agar lebih rapi dipanggil di UI)
+  // TAHAP 6: Menambah course dan me-refresh daftar secara otomatis
+  Future<void> addCourse(Course course) async {
+    await repository.createCourse(course);
+    await loadCourses(); // Refresh isi list dengan data terbaru
+  }
+
   bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
@@ -40,7 +45,6 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // TAHAP 13: Tambahkan getter khusus untuk memfilter course yang difavoritkan
   List<Course> get favoriteCourses {
     return courses.where((c) => _favorites.contains(c.code)).toList();
   }
