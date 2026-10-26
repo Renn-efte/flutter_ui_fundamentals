@@ -1,22 +1,26 @@
 //Derren Wardhana - 2415051073
 
+// Bagian atas lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'services/course_service.dart';
+import 'services/course_api_service.dart'; // Import service API yang baru
 import 'repositories/course_repository.dart';
 import 'providers/course_provider.dart';
 import 'screens/home_page.dart';
 import 'screens/courses_page.dart';
-import 'screens/favorites_page.dart'; // TAHAP 13: Import halaman Favorites baru
+import 'screens/favorites_page.dart';
 import 'screens/profile_page.dart';
 
-const String studentName = 'Derren Wardhana';
-const String studentId = '2415051073';
+const String studentName = 'Derren Wardhana'; // Pastikan nama Bli benar
+const String studentId = '2415051073'; // Pastikan NIM Bli benar
 
 void main() {
-  final courseService = CourseService();
-  final courseRepository = CourseRepository(courseService);
+  // Masukkan URL API dosen ke sini
+  const String apiBaseUrl = 'https://course-api-pearl.vercel.app';
+  
+  final courseApiService = CourseApiService(apiBaseUrl);
+  final courseRepository = CourseRepository(courseApiService);
 
   runApp(
     ChangeNotifierProvider(

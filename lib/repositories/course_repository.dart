@@ -1,16 +1,13 @@
-// Lokasi file: lib/repositories/course_repository.dart
-
+// Lokasi: lib/repositories/course_repository.dart
 import '../models/course.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart'; // Import service baru
 
 class CourseRepository {
-  final CourseService service;
+  final CourseApiService service; // Gunakan CourseApiService
 
-  // Menerima CourseService melalui constructor
   CourseRepository(this.service);
 
   Future<List<Course>> getCourses() {
-    // Repository memanggil fungsi dari service
-    return service.loadCourses();
+    return service.getCourses(); // Panggil method dari API service
   }
 }
