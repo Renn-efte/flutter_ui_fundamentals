@@ -15,4 +15,9 @@ class CourseRepository {
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
   }
+
+  // TAHAP 7: Fungsi meneruskan PUT dari service
+  Future<void> updateCourse(int id, Course course) {
+    return service.updateCourse(id, course);
+  }
 }

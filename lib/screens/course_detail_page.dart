@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/student_header.dart';
+import 'course_form_page.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final Course course;
@@ -19,7 +20,18 @@ class CourseDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(course.title),
         actions: [
-          // Tambahkan tombol action favorite di app bar (pojok kanan atas)
+          // TAHAP 7: Tombol Edit (Akan mengarahkan ke form dan mengirim data course)
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CourseFormPage(courseToEdit: course),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.red),
             onPressed: () {

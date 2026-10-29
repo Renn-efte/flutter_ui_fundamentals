@@ -34,6 +34,12 @@ class CourseProvider extends ChangeNotifier {
     await loadCourses(); // Refresh isi list dengan data terbaru
   }
 
+  // TAHAP 7: Memperbarui course dan me-refresh daftar secara otomatis
+  Future<void> editCourse(int id, Course course) async {
+    await repository.updateCourse(id, course);
+    await loadCourses(); 
+  }
+
   bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
