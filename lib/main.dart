@@ -1,4 +1,6 @@
 //Derren Wardhana - 2415051073
+// ignore_for_file: unused_local_variable, unused_import
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +13,7 @@ import 'screens/courses_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/profile_page.dart';
 import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 
 const String studentName = 'Derren Wardhana'; // Pastikan nama Bli benar
 const String studentId = '2415051073'; // Pastikan NIM Bli benar
@@ -21,14 +24,15 @@ void main() async {
 
   // TAHAP 10: Inisialisasi Supabase 
   await Supabase.initialize(
-    url: 'https://dquvawyjxltbekddfzaw.supabase.co/rest/v1/',
+    url: 'https://dquvawyjxltbekddfzaw.supabase.co',
     publishableKey: 'sb_publishable_j02DccIFVjzGYjsKr4U80g_OZPsZD8h',
   );
 
   const String apiBaseUrl = 'https://course-api-pearl.vercel.app';
   
   // TAHAP 9: Kita mendefinisikan sumber datanya menggunakan tipe CourseDataSource
-  final CourseDataSource dataSource = CourseApiService(apiBaseUrl); 
+  // final CourseDataSource dataSource = CourseApiService(apiBaseUrl); 
+  final CourseDataSource dataSource = CourseSupabaseService();
   final courseRepository = CourseRepository(dataSource);
 
   runApp(
