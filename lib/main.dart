@@ -1,5 +1,6 @@
 //Derren Wardhana - 2415051073
 // ignore_for_file: unused_local_variable, unused_import
+//"Selesaikan Course Data Manager CRUD terintegrasi"
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
