@@ -1,6 +1,4 @@
 //Derren Wardhana - 2415051073
-
-// Bagian atas lib/main.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
