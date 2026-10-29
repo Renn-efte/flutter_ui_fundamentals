@@ -42,6 +42,12 @@ class CourseSupabaseService implements CourseDataSource {
         .eq('id', id); // PENTING: Memastikan hanya data dengan id ini yang diubah
   }
 
+  // TAHAP 15: Fungsi DELETE ke Supabase
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> deleteCourse(int id) async {
+    await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id); // PENTING: Filter berdasarkan id agar tidak terhapus semua
+  }
 }
