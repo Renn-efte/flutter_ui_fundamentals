@@ -2,11 +2,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
+import 'course_data_source.dart'; // Import kontraknya
 
-class CourseApiService {
+// TAHAP 9: Implementasi kontrak CourseDataSource
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
   final String baseUrl;
 
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/courses'));
     if (response.statusCode != 200) {
@@ -16,23 +19,20 @@ class CourseApiService {
     return data.map((e) => Course.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // TAHAP 6: Fungsi POST untuk membuat data baru
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/courses'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(course.toJson()),
     );
-    
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return Course.fromJson(
-        jsonDecode(response.body) as Map<String, dynamic>,
-      );
+      return Course.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
     }
     throw Exception('Gagal membuat course');
   }
 
-  // TAHAP 7: Fungsi PUT untuk memperbarui data
+  @override
   Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
       Uri.parse('$baseUrl/courses/$id'),
@@ -44,7 +44,7 @@ class CourseApiService {
     }
   }
 
-  // TAHAP 8: Fungsi DELETE untuk menghapus data
+  @override
   Future<void> deleteCourse(int id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/courses/$id'),
