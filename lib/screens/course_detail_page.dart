@@ -32,6 +32,50 @@ class CourseDetailPage extends StatelessWidget {
               );
             },
           ),
+
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.redAccent),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Hapus Course'),
+                  content: Text('Apakah Anda yakin ingin menghapus course ${course.code}?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext), // Tutup dialog (batal)
+                      child: const Text('Batal'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.pop(dialogContext); // Tutup dialog konfirmasi terlebih dulu
+                        
+                        try {
+                          // Panggil fungsi Provider
+                          await context.read<CourseProvider>().removeCourseData(course.id!, course.code);
+                          
+                          if (!context.mounted) return;
+                          
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Course berhasil dihapus'), backgroundColor: Colors.red),
+                          );
+                          Navigator.pop(context); // Tutup halaman detail, kembali ke list
+                          
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                      child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
           IconButton(
             icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.red),
             onPressed: () {

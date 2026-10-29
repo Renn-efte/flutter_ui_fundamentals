@@ -40,6 +40,18 @@ class CourseProvider extends ChangeNotifier {
     await loadCourses(); 
   }
 
+  // TAHAP 8: Menghapus course dari database dan membersihkan data favorites yatim
+  Future<void> removeCourseData(int id, String code) async {
+    await repository.deleteCourse(id);
+    
+    // Hapus dari favorites agar tidak ada data yatim
+    if (_favorites.contains(code)) {
+      _favorites.remove(code);
+    }
+    
+    await loadCourses(); // Refresh daftar data
+  }
+
   bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
