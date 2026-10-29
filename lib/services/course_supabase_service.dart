@@ -33,8 +33,14 @@ class CourseSupabaseService implements CourseDataSource {
     return Course.fromJson(row);
   }
 
+  // TAHAP 14: Fungsi PUT/UPDATE ke Supabase
   @override
-  Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
+  Future<void> updateCourse(int id, Course course) async {
+    await supabase
+        .from('courses')
+        .update(course.toJson())
+        .eq('id', id); // PENTING: Memastikan hanya data dengan id ini yang diubah
+  }
 
   @override
   Future<void> deleteCourse(int id) => throw UnimplementedError();
