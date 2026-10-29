@@ -21,8 +21,17 @@ class CourseSupabaseService implements CourseDataSource {
   }
 
   // Sisa method diisi UnimplementedError sementara agar tidak error saat di-compile
+  // TAHAP 13: Fungsi POST/INSERT ke Supabase
   @override
-  Future<Course> createCourse(Course course) => throw UnimplementedError();
+  Future<Course> createCourse(Course course) async {
+    final row = await supabase
+        .from('courses')
+        .insert(course.toJson())
+        .select() // Mengembalikan data yang baru di-insert
+        .single(); // Pastikan hanya 1 baris yang dikembalikan
+
+    return Course.fromJson(row);
+  }
 
   @override
   Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
